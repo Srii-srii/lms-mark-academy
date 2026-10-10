@@ -91,3 +91,12 @@ code { background: #eef0f6; padding: 1px 6px; border-radius: 6px; font-size: .9e
 /* Prose */
 .prose { max-width: 760px; padding: 40px 0; }
 .prose h2 { margin-top: 28px; font-size: 22px; }
+
+/* Zoho sign-up form: fit the card and phone widths (Zoho ships fixed 600px blocks) */
+#zma-form-slot { min-width: 0; }
+#zma-form-slot #SIGNUP_PAGE { background: transparent !important; padding: 0 !important; }
+#zma-form-slot #imgBlock { display: none !important; }
+#zma-form-slot #signupMainDiv,
+#zma-form-slot table,
+#zma-form-slot input[type="text"],
+#zma-form-slot input[type="email"] { max-width: 100% !important; box-sizing: border-box; }
