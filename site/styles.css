@@ -100,3 +100,6 @@ code { background: #eef0f6; padding: 1px 6px; border-radius: 6px; font-size: .9e
 #zma-form-slot table,
 #zma-form-slot input[type="text"],
 #zma-form-slot input[type="email"] { max-width: 100% !important; box-sizing: border-box; }
+/* Zoho's success message is absolutely positioned over the email field; show it above the form instead */
+#zma-form-slot #Zc_SignupSuccess { position: static !important; width: auto !important; margin: 0 0 12px !important; word-break: normal !important; }
+#zma-form-slot #signupSuccessMsg { color: #1e6b52 !important; font-size: 15px !important; }

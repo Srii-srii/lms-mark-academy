@@ -92,7 +92,7 @@ Create **one flow per event**. Each flow uses **Trigger: Webhook**, payload form
 
 | Flow name | ZMA actions | CPaaS action |
 | --- | --- | --- |
-| `CORE · learner.signed_up` | Create/update lead (all fields, `lifecycle_stage=lead`), add to `POC – Learners`, add to journey **Lead nurture** (only if `consent_email_marketing = yes`, using a Decision step) | Send welcome email |
+| `CORE · learner.signed_up` | Create/update lead (all fields, `lifecycle_stage=lead`), add to `POC – Learners`, add to journey **Lead nurture** (only if `consent_email_marketing = true`, using a Decision step) | Send welcome email |
 | `CORE · cart.updated` | Update lead (`last_course_*`), add to journey **Abandoned cart** | — |
 | `CORE · order.completed` | Update lead (`lifecycle_stage=enrolled`, `last_order_id`), add lead score +20, add to journey **Onboarding** | Send **enrolment confirmation** |
 | `CORE · lesson.completed` | Update lead (`lifecycle_stage=active`, `progress_percent`), add lead score +5 | — |
@@ -132,7 +132,7 @@ Create three templates: **Welcome**, **Enrolment confirmation** (course title, o
 | Journey | Entry | Steps (demo timing / real timing) | Exit rule |
 | --- | --- | --- | --- |
 | Lead nurture | Added by `CORE · learner.signed_up` | Email 1 now → wait 10 min / 2 days → Email 2 → wait 10 min / 3 days → Email 3 (offer) | `lifecycle_stage` is not `lead` |
-| Abandoned cart | Added by `CORE · cart.updated` | Wait 5 min / 24 h → if `lifecycle_stage` is still `lead`, send "Your course is waiting" email (+ WhatsApp template if `consent_whatsapp = yes`) | `lifecycle_stage = enrolled` |
+| Abandoned cart | Added by `CORE · cart.updated` | Wait 5 min / 24 h → if `lifecycle_stage` is still `lead`, send "Your course is waiting" email (+ WhatsApp template if `consent_whatsapp = true`) | `lifecycle_stage = enrolled` |
 | Onboarding | Added by `CORE · order.completed` | "How to get started" now → wait 10 min / 3 days → nudge if `progress_percent` is empty | `lifecycle_stage = completed` |
 | Completed | Added by `CORE · course.completed` | wait 5 min / 2 days → feedback request → wait 10 min / 7 days → next-course offer | unsubscribe or new purchase |
 

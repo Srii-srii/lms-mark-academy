@@ -72,6 +72,10 @@ def load_courses() -> dict:
     return courses
 
 
+def bool_str(yes_no: str) -> str:
+    return "true" if yes_no == "yes" else "false"
+
+
 def build_payload(event: str, args, courses: dict, lesson_no: int) -> dict:
     """Flat key/value payload: easiest for Zoho Flow to map field by field."""
     course = courses.get(args.course) or next(iter(courses.values()))
@@ -90,9 +94,10 @@ def build_payload(event: str, args, courses: dict, lesson_no: int) -> dict:
         "learner_last_name": args.last_name,
         "learner_email": args.email,
         "learner_phone": args.phone,
-        "consent_email_marketing": args.consent_email,
-        "consent_whatsapp": args.consent_whatsapp,
-        "consent_sms": args.consent_sms,
+        # true/false strings: ZMA checkbox fields reject anything else.
+        "consent_email_marketing": bool_str(args.consent_email),
+        "consent_whatsapp": bool_str(args.consent_whatsapp),
+        "consent_sms": bool_str(args.consent_sms),
         "consent_captured_at": now,
         "consent_source": "demo-site-signup",
         "course_id": args.course,
