@@ -23,7 +23,7 @@ Email can only be authenticated (SPF, DKIM, DMARC) with DNS records on a domain 
 
 | Subdomain | Used by | Purpose |
 | --- | --- | --- |
-| `news.lms-mark.website` | ZMA | Marketing email (from-address like `hello@news.lms-mark.website`) |
+| `lms-mark.website` (root) | ZMA | Marketing email from `hello@lms-mark.website`. Done: SPF, DKIM, DMARC and Custom Return Path (`zma` CNAME) all authenticated |
 | `notify.lms-mark.website` | CPaaS | Transactional email (enrolment, completion) |
 | `academy.lms-mark.website` (optional) | GitHub Pages | A nicer site URL than `github.io` |
 
@@ -59,7 +59,7 @@ Menu names can differ slightly between Zoho versions and data centres. Look for 
 
 ### 2.1 Sending domains (start first, because DNS takes time)
 
-- **ZMA**: Settings → Sender domains / Domain authentication → add `news.lms-mark.website` → copy the SPF/DKIM records into your registrar's DNS → Verify.
+- **ZMA** (done): sender `hello@lms-mark.website` verified through Namecheap email forwarding. Mail Settings set to Custom MX (eforward1-5) so a single combined SPF record can hold both includes: `v=spf1 include:zcsend.in include:spf.efwd.registrar-servers.com ~all`. DKIM `101539._domainkey`, DMARC `_dmarc`, Custom Return Path CNAME `zma` → `60091353483.zcsend.in`.
 - **CPaaS (ZeptoMail)**: Mail agents → add a mail agent "Academy POC" → Domains → add `notify.lms-mark.website` → add its DKIM and CNAME records → Verify.
 - Add the DMARC record from section 0.
 
@@ -81,6 +81,10 @@ Menu names can differ slightly between Zoho versions and data centres. Look for 
 4. Zobot (Codeless bot builder): greeting → menu **Courses / Fees / Upcoming webinars / Talk to a person** → FAQ answers → collect name, email and phone → "Talk to a person" routes to the operator.
 5. Messenger is already connected. Instagram DM: in Instagram, turn on *Allow access to messages*, then connect it in SalesIQ.
 6. Integrations → Zoho Marketing Automation: push chat visitors who left an email into `POC – Learners`.
+
+> **POC decision (10 Oct 2026): CPaaS is parked.** CPaaS refused to add `notify.lms-mark.website` or `lms-mark.website` ("Domain could not be added. Please contact support"), and it can't send until a domain is verified. A support request is open. Until then, every "CPaaS action" below is sent as the **first step (no wait) of the matching ZMA journey**, from `hello@lms-mark.website`. Once CPaaS is approved, swap that step back to a CPaaS "Send email" action in `CORE · order.completed` and `CORE · course.completed`. Nothing else changes.
+>
+> Known limits of ZMA for transactional mail (show these to the CTO): unsubscribed contacts may not receive receipts, there's no guaranteed delivery time, it shares sending reputation with campaigns, every recipient counts as a contact, and frequency caps apply. Test it: unsubscribe a test lead, then fire `order.completed`.
 
 ### 2.4 Zoho Flow: core flows (the part that carries over to TrainerCentral)
 
