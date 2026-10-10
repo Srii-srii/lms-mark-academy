@@ -70,8 +70,9 @@
         <button class="btn" data-choice="accepted">Accept analytics</button>
       </div>`;
     banner.addEventListener("click", (e) => {
-      const choice = e.target.dataset && e.target.dataset.choice;
-      if (!choice) return;
+      const btn = e.target.closest("[data-choice]");
+      if (!btn) return;
+      const choice = btn.dataset.choice;
       writeConsent(choice);
       banner.hidden = true;
       if (choice === "accepted") loadTracking();
@@ -101,9 +102,14 @@
   document.addEventListener("DOMContentLoaded", () => {
     renderChrome();
     loadChat();
-    loadSignupForm();
     const consent = readConsent();
     if (consent === "accepted") loadTracking();
     else if (consent !== "declined") showBanner();
   });
+
+  // Zoho's optin.min.js (setupSF) waits for DOMContentLoaded unless
+  // readyState is already "complete". Injecting after `load` guarantees
+  // "complete", so the form's submit handler actually gets bound.
+  if (document.readyState === "complete") loadSignupForm();
+  else window.addEventListener("load", loadSignupForm);
 })();
