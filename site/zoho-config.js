@@ -391,5 +391,5 @@ margin: 0 auto
 
   // Zoho SalesIQ -> Settings -> Brands -> Installation -> website code.
   // Functional chat, loaded on every page.
-  SALESIQ_WIDGET_SNIPPET: ``,
+  SALESIQ_WIDGET_SNIPPET: String.raw`<script>window.$zoho=window.$zoho || {};$zoho.salesiq=$zoho.salesiq||{ready:function(){}}</script><script id="zsiqscript" src="https://salesiq.zohopublic.in/widget?wc=siqe033b24f981cca0d3b5d75ba37ae8869d9701ec17be636e8670be51f2c7322ad" defer></script>`,
 };
