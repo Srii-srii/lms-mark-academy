@@ -1,0 +1,75 @@
+name: Simulate learner event
+
+# Run from GitHub: Actions -> "Simulate learner event" -> Run workflow.
+# Webhook URLs live in the repo secret ZOHO_FLOW_WEBHOOKS (JSON map event -> URL).
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Single event, or a scenario"
+        type: choice
+        default: scenario
+        options: [scenario, event]
+      scenario:
+        description: "Scenario (when mode = scenario)"
+        type: choice
+        default: full_journey
+        options: [full_journey, abandoned_cart, cart_then_purchase]
+      event:
+        description: "Event (when mode = event)"
+        type: choice
+        default: learner.signed_up
+        options: [learner.signed_up, cart.updated, order.completed, lesson.completed, course.completed, consent.updated]
+      email:
+        description: "Test learner email"
+        required: true
+      first_name:
+        description: "First name"
+        default: Test
+      phone:
+        description: "Mobile in E.164 (+91...)"
+        default: ""
+      course:
+        description: "Course id"
+        type: choice
+        default: ecg-101
+        options: [ecg-101, bls-201, pharm-110, research-300]
+      consent_whatsapp:
+        description: "WhatsApp marketing consent"
+        type: choice
+        default: "no"
+        options: ["yes", "no"]
+      delay:
+        description: "Seconds between scenario steps"
+        default: "60"
+
+permissions:
+  contents: read
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      # The repo is public (free GitHub Pages), so its run logs are public too.
+      # Inputs are read from the event file and masked, never placed in `env:`
+      # or the script text, so the email and phone never appear in the log.
+      - name: Send event(s) to Zoho Flow
+        env:
+          ZOHO_FLOW_WEBHOOKS: ${{ secrets.ZOHO_FLOW_WEBHOOKS }}
+          ZOHO_FLOW_WEBHOOK_URL: ${{ secrets.ZOHO_FLOW_WEBHOOK_URL }}
+          SITE_URL: https://academy.lms-mark.website
+        run: |
+          inp() { jq -r ".inputs.$1 // \"\"" "$GITHUB_EVENT_PATH"; }
+          EMAIL="$(inp email)"; PHONE="$(inp phone)"; FIRST_NAME="$(inp first_name)"
+          for v in "$EMAIL" "$PHONE" "$FIRST_NAME"; do if [ -n "$v" ]; then echo "::add-mask::$v"; fi; done
+          MODE="$(inp mode)"; SCENARIO="$(inp scenario)"; EVENT="$(inp event)"
+          COURSE="$(inp course)"; CONSENT_WA="$(inp consent_whatsapp)"; DELAY="$(inp delay)"
+          if [ "$MODE" = "scenario" ]; then SEL="--scenario $SCENARIO"; else SEL="--event $EVENT"; fi
+          python simulator/send_event.py $SEL \
+            --email "$EMAIL" --first-name "$FIRST_NAME" --phone "$PHONE" \
+            --course "$COURSE" --consent-whatsapp "$CONSENT_WA" --delay "$DELAY"

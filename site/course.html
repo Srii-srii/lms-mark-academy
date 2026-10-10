@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Course · LMS-Mark Academy</title>
+  <link rel="stylesheet" href="styles.css?v=2">
+  <script src="zoho-config.js?v=2"></script>
+  <script src="courses.js?v=2"></script>
+  <script src="app.js?v=2"></script>
+</head>
+<body data-page="course">
+  <header id="site-header"></header>
+
+  <main class="wrap">
+    <div class="detail" id="detail"></div>
+  </main>
+
+  <footer id="site-footer"></footer>
+
+  <script>
+    const id = new URLSearchParams(location.search).get("id");
+    const c = window.COURSES.find((x) => x.id === id);
+    const el = document.getElementById("detail");
+    if (!c) {
+      el.innerHTML = `<div class="panel"><h2>Course not found</h2><p><a href="courses.html">Back to all courses</a></p></div>`;
+    } else {
+      document.title = `${c.title} · LMS-Mark Academy`;
+      el.innerHTML = `
+        <div class="panel">
+          <span class="meta">${c.level} · ${c.duration} · ${c.lessons} lessons</span>
+          <h2 style="margin-top:6px">${c.title}</h2>
+          <p>${c.summary}</p>
+          <h3>What you will learn</h3>
+          <ul>${c.outcomes.map((o) => `<li>${o}</li>`).join("")}</ul>
+        </div>
+        <aside class="panel">
+          <div class="price" style="font-size:28px">${formatPrice(c.price)}</div>
+          <p class="muted">Lifetime access · Certificate on completion</p>
+          <a class="btn" style="display:block;text-align:center" href="index.html#join">Enrol (demo)</a>
+          <p class="meta" style="margin-top:12px">Demo site: enrolment and payment are simulated by the POC event simulator.
+          Join the academy to get course updates, or ask a question in the chat.</p>
+        </aside>`;
+    }
+  </script>
+</body>
+</html>

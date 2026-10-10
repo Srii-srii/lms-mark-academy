@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LMS-Mark Academy</title>
+  <meta name="description" content="Clinical skills courses taught by practitioners.">
+  <link rel="stylesheet" href="styles.css?v=2">
+  <script src="zoho-config.js?v=2"></script>
+  <script src="courses.js?v=2"></script>
+  <script src="app.js?v=2"></script>
+</head>
+<body data-page="home">
+  <header id="site-header"></header>
+
+  <main>
+    <section class="hero">
+      <div class="wrap">
+        <h1>Clinical skills you can use<br>on your next shift.</h1>
+        <p>Short, practical courses in ECG, life support, pharmacology and research writing, taught by practising clinicians.</p>
+        <div class="hero-actions">
+          <a class="btn" href="courses.html">Browse courses</a>
+          <a class="btn btn-ghost" href="#join">Get free course updates</a>
+        </div>
+        <div class="stats">
+          <div><strong>4</strong><span class="muted">courses</span></div>
+          <div><strong>46</strong><span class="muted">lessons</span></div>
+          <div><strong>Certificate</strong><span class="muted">on completion</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <h2>Popular courses</h2>
+        <p class="section-lead">Start with the one that matches your next rotation.</p>
+        <div class="grid" id="featured"></div>
+      </div>
+    </section>
+
+    <section id="join">
+      <div class="wrap join">
+        <div>
+          <h2>Join the academy</h2>
+          <p class="section-lead">Get new course announcements, free webinars and study tips. You choose the channels.</p>
+          <ul class="consent-list">
+            <li>Each channel (email, WhatsApp, SMS) has its own opt-in box, unticked by default.</li>
+            <li>Unsubscribe from any email in one click, or reply STOP on WhatsApp.</li>
+            <li>We record when and where you gave consent. See our <a href="privacy.html">privacy notice</a>.</li>
+          </ul>
+        </div>
+        <div id="zma-form-slot"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer id="site-footer"></footer>
+
+  <script>
+    const palette = ["#3b4cca", "#0f9d8a", "#c2416b", "#b8741a"];
+    document.getElementById("featured").innerHTML = window.COURSES.map((c, i) => `
+      <article class="card">
+        <div class="card-art" style="background:${palette[i % palette.length]}">${c.title}</div>
+        <div class="card-body">
+          <span class="meta">${c.level} · ${c.duration} · ${c.lessons} lessons</span>
+          <p class="muted" style="margin:0">${c.summary}</p>
+          <span class="price">${formatPrice(c.price)}</span>
+          <a class="btn" href="course.html?id=${c.id}">View course</a>
+        </div>
+      </article>`).join("");
+  </script>
+</body>
+</html>
