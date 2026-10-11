@@ -1,15 +1,7 @@
-// Shared behaviour: header/footer, cookie notice, Zoho snippet loading.
+// Shared behaviour: header/footer and Zoho snippet loading.
+// Cookie consent is shown by SalesIQ's own banner (visitor tracking is on in SalesIQ).
 (function () {
   const cfg = window.ZOHO_CONFIG || {};
-  const CONSENT_KEY = "lmsmark_cookie_consent"; // "accepted" | "declined"
-
-  function readConsent() {
-    try { return localStorage.getItem(CONSENT_KEY); } catch (e) { return null; }
-  }
-  function writeConsent(v) {
-    try { localStorage.setItem(CONSENT_KEY, v); } catch (e) { /* storage blocked: banner shows again next visit */ }
-  }
-
   // Injects a pasted HTML snippet into `target`, re-creating <script> tags so they execute.
   function injectSnippet(snippet, target) {
     if (!snippet || !snippet.trim()) return false;
@@ -49,35 +41,9 @@
       footer.innerHTML = `
         <div class="wrap footer-grid">
           <div><strong>LMS-Mark Academy</strong><br><span class="muted">Clinical skills, taught by practitioners.</span></div>
-          <div><a href="privacy.html">Privacy &amp; consent</a><br><a href="#" id="cookie-settings">Cookie settings</a></div>
+          <div><a href="privacy.html">Privacy &amp; consent</a></div>
         </div>`;
-      const link = document.getElementById("cookie-settings");
-      if (link) link.addEventListener("click", (e) => { e.preventDefault(); showBanner(); });
     }
-  }
-
-  function showBanner() {
-    let banner = document.getElementById("cookie-banner");
-    if (banner) { banner.hidden = false; return; }
-    banner = document.createElement("div");
-    banner.id = "cookie-banner";
-    banner.className = "cookie-banner";
-    banner.innerHTML = `
-      <p>We use Zoho analytics cookies to understand which pages and courses you look at, so we can send you relevant updates.
-      Chat works either way. <a href="privacy.html">Read more</a></p>
-      <div class="cookie-actions">
-        <button class="btn btn-ghost" data-choice="declined">Decline</button>
-        <button class="btn" data-choice="accepted">Accept analytics</button>
-      </div>`;
-    banner.addEventListener("click", (e) => {
-      const btn = e.target.closest("[data-choice]");
-      if (!btn) return;
-      const choice = btn.dataset.choice;
-      writeConsent(choice);
-      banner.hidden = true;
-      if (choice === "accepted") loadTracking();
-    });
-    document.body.appendChild(banner);
   }
 
   let trackingLoaded = false;
@@ -102,9 +68,7 @@
   document.addEventListener("DOMContentLoaded", () => {
     renderChrome();
     loadChat();
-    const consent = readConsent();
-    if (consent === "accepted") loadTracking();
-    else if (consent !== "declined") showBanner();
+    loadTracking();
   });
 
   // Zoho's optin.min.js (setupSF) waits for DOMContentLoaded unless
