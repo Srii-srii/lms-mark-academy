@@ -55,7 +55,7 @@ def build() -> None:
         articles.append(
             f"## {c['title']}\n\n"
             f"**Title for Answer Hub:** {c['title']}: who it's for and what to try instead\n\n"
-            f"{c['title']} is a {c['level'].lower()} course on {c['goal'].lower()}: {c['summary']} "
+            f"{c['title']} is a course on {c['goal'][0].lower() + c['goal'][1:]} (level: {c['level']}). {c['summary']} "
             f"It takes {c['duration']} over {c['lessons']} lessons and costs {price(c['price'])}, with a certificate on completion.\n\n"
             f"Who it's for: {c['audience']}\n\n"
             f"You will learn: {'; '.join(c['outcomes'])}.\n\n"

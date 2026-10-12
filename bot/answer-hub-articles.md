@@ -18,7 +18,7 @@ Shortest and cheapest: Basic Life Support Refresher (3 hours, ₹799). Full guid
 
 **Title for Answer Hub:** ECG Interpretation Essentials: who it's for and what to try instead
 
-ECG Interpretation Essentials is a beginner course on reading ecgs and heart rhythms: Read rhythm strips with confidence: rate, rhythm, axis, intervals and the ten patterns you will meet most. It takes 6 hours over 12 lessons and costs ₹1,499, with a certificate on completion.
+ECG Interpretation Essentials is a course on reading ECGs and heart rhythms (level: Beginner). Read rhythm strips with confidence: rate, rhythm, axis, intervals and the ten patterns you will meet most. It takes 6 hours over 12 lessons and costs ₹1,499, with a certificate on completion.
 
 Who it's for: Nursing staff, junior doctors, paramedics and students who see ECGs on shift but don't yet read them confidently.
 
@@ -34,7 +34,7 @@ Course page: https://academy.lms-mark.website/course.html?id=ecg-101
 
 **Title for Answer Hub:** Basic Life Support Refresher: who it's for and what to try instead
 
-Basic Life Support Refresher is a all levels course on emergencies and resuscitation: Current adult, child and infant BLS sequences, team roles and high-quality CPR metrics. It takes 3 hours over 8 lessons and costs ₹799, with a certificate on completion.
+Basic Life Support Refresher is a course on emergencies and resuscitation (level: All levels). Current adult, child and infant BLS sequences, team roles and high-quality CPR metrics. It takes 3 hours over 8 lessons and costs ₹799, with a certificate on completion.
 
 Who it's for: Any healthcare worker who needs to refresh resuscitation skills, from students to senior staff.
 
@@ -50,7 +50,7 @@ Course page: https://academy.lms-mark.website/course.html?id=bls-201
 
 **Title for Answer Hub:** Clinical Pharmacology Basics: who it's for and what to try instead
 
-Clinical Pharmacology Basics is a intermediate course on medicines and safe prescribing: Pharmacokinetics, dosing in renal and hepatic impairment, and the interactions that matter on the ward. It takes 8 hours over 16 lessons and costs ₹1,999, with a certificate on completion.
+Clinical Pharmacology Basics is a course on medicines and safe prescribing (level: Intermediate). Pharmacokinetics, dosing in renal and hepatic impairment, and the interactions that matter on the ward. It takes 8 hours over 16 lessons and costs ₹1,999, with a certificate on completion.
 
 Who it's for: Nurses, pharmacists and doctors who prescribe, check or give medicines on the ward.
 
@@ -66,7 +66,7 @@ Course page: https://academy.lms-mark.website/course.html?id=pharm-110
 
 **Title for Answer Hub:** Medical Research Writing: who it's for and what to try instead
 
-Medical Research Writing is a advanced course on research and publishing: Structure, write and submit a clinical paper: IMRaD, reporting guidelines and responding to reviewers. It takes 5 hours over 10 lessons and costs ₹1,299, with a certificate on completion.
+Medical Research Writing is a course on research and publishing (level: Advanced). Structure, write and submit a clinical paper: IMRaD, reporting guidelines and responding to reviewers. It takes 5 hours over 10 lessons and costs ₹1,299, with a certificate on completion.
 
 Who it's for: Clinicians and postgraduate students planning to write up a case, audit or study for publication.
 
