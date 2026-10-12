@@ -30,6 +30,7 @@
           <nav>
             <a href="index.html" ${page === "home" ? 'aria-current="page"' : ""}>Home</a>
             <a href="courses.html" ${page === "courses" ? 'aria-current="page"' : ""}>Courses</a>
+            <a href="course-guide.html" ${page === "guide" ? 'aria-current="page"' : ""}>Course guide</a>
             <a href="privacy.html" ${page === "privacy" ? 'aria-current="page"' : ""}>Privacy</a>
             <a class="btn btn-small" href="index.html#join">Join free</a>
           </nav>
