@@ -19,7 +19,7 @@ on:
         description: "Event (when mode = event)"
         type: choice
         default: learner.signed_up
-        options: [learner.signed_up, cart.updated, order.completed, lesson.completed, course.completed, consent.updated]
+        options: [learner.signed_up, cart.updated, order.completed, lesson.completed, course.completed, consent.updated, course.retired]
       email:
         description: "Test learner email"
         required: true
@@ -39,6 +39,11 @@ on:
         type: choice
         default: "no"
         options: ["yes", "no"]
+      learner_status:
+        description: "course.retired only: learner's relation to the course"
+        type: choice
+        default: enrolled
+        options: [enrolled, active, in_cart]
       delay:
         description: "Seconds between scenario steps"
         default: "60"
@@ -68,8 +73,9 @@ jobs:
           EMAIL="$(inp email)"; PHONE="$(inp phone)"; FIRST_NAME="$(inp first_name)"
           for v in "$EMAIL" "$PHONE" "$FIRST_NAME"; do if [ -n "$v" ]; then echo "::add-mask::$v"; fi; done
           MODE="$(inp mode)"; SCENARIO="$(inp scenario)"; EVENT="$(inp event)"
-          COURSE="$(inp course)"; CONSENT_WA="$(inp consent_whatsapp)"; DELAY="$(inp delay)"
+          COURSE="$(inp course)"; CONSENT_WA="$(inp consent_whatsapp)"; DELAY="$(inp delay)"; STATUS="$(inp learner_status)"
           if [ "$MODE" = "scenario" ]; then SEL="--scenario $SCENARIO"; else SEL="--event $EVENT"; fi
           python simulator/send_event.py $SEL \
             --email "$EMAIL" --first-name "$FIRST_NAME" --phone "$PHONE" \
-            --course "$COURSE" --consent-whatsapp "$CONSENT_WA" --delay "$DELAY"
+            --course "$COURSE" --consent-whatsapp "$CONSENT_WA" --delay "$DELAY" \
+            --learner-status "${STATUS:-enrolled}"

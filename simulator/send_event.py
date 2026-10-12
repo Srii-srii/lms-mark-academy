@@ -30,6 +30,8 @@ EVENTS = [
     "lesson.completed",
     "course.completed",
     "consent.updated",
+    # Sent once per affected learner when a course is deleted/unpublished.
+    "course.retired",
 ]
 
 SCENARIOS = {
@@ -48,6 +50,14 @@ STAGE_BY_EVENT = {
     "order.completed": "enrolled",
     "lesson.completed": "active",
     "course.completed": "completed",
+}
+
+# Status-specific wording for course.retired, carried in the event so Zoho needs
+# no branching: the email just shows the course_notice field.
+RETIRED_NOTICE = {
+    "enrolled": "You're enrolled in this course. Your access stays open for now, and our team will contact you about your options.",
+    "active": "You're partway through this course. Your progress and access stay open for now, and our team will contact you about your options.",
+    "in_cart": "This course was in your cart. We've removed it, so you won't be charged. You can browse our other courses anytime.",
 }
 
 COURSES_FILE = Path(__file__).resolve().parent.parent / "site" / "courses.js"
@@ -109,6 +119,10 @@ def build_payload(event: str, args, courses: dict, lesson_no: int) -> dict:
         "order_amount": "",
         "lesson_number": "",
         "progress_percent": "",
+        "course_status": "",
+        "affected_status": "",
+        "course_notice": "",
+        "cart_status": "active" if event == "cart.updated" else "",
     }
     if event == "order.completed":
         payload["order_id"] = "ORD-" + uuid.uuid4().hex[:8].upper()
@@ -118,6 +132,13 @@ def build_payload(event: str, args, courses: dict, lesson_no: int) -> dict:
         payload["progress_percent"] = round(100 * lesson_no / course["lessons"])
     if event == "course.completed":
         payload["progress_percent"] = 100
+    if event == "course.retired":
+        payload["course_status"] = "retired"
+        payload["affected_status"] = args.learner_status
+        payload["course_notice"] = RETIRED_NOTICE[args.learner_status]
+        payload["course_url"] = f"{site}/courses.html"  # the course page no longer exists
+        if args.learner_status == "in_cart":
+            payload["cart_status"] = "course-retired"
     return payload
 
 
@@ -162,6 +183,8 @@ def main() -> None:
     p.add_argument("--first-name", default="Test")
     p.add_argument("--last-name", default="Learner")
     p.add_argument("--phone", default="", help="E.164, e.g. +919876543210")
+    p.add_argument("--learner-status", default="enrolled", choices=sorted(RETIRED_NOTICE),
+                   help="course.retired only: how this learner relates to the retired course")
     p.add_argument("--course", default="ecg-101")
     p.add_argument("--consent-email", default="yes", choices=["yes", "no"])
     p.add_argument("--consent-whatsapp", default="no", choices=["yes", "no"])
