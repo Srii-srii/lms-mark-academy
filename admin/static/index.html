@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Academy Admin</title>
+  <link rel="stylesheet" href="/static/admin.css">
+</head>
+<body>
+  <!-- Sign-in -->
+  <section id="login-view" class="login" hidden>
+    <form id="login-form" class="card narrow">
+      <h1>LMS-Mark Academy admin</h1>
+      <label>Username <input name="username" autocomplete="username" required value="admin"></label>
+      <label>Password <input name="password" type="password" autocomplete="current-password" required></label>
+      <p class="error" id="login-error" role="alert"></p>
+      <button class="primary" type="submit">Sign in</button>
+    </form>
+  </section>
+
+  <!-- App -->
+  <div id="app-view" hidden>
+    <header class="topbar">
+      <strong>LMS-Mark Academy admin</strong>
+      <nav>
+        <button class="tab active" data-tab="courses">Courses</button>
+        <button class="tab" data-tab="academy">Academy info</button>
+        <button class="tab" data-tab="publish">Publish</button>
+        <button class="tab" data-tab="activity">Activity</button>
+      </nav>
+      <span class="who"><span id="who"></span> · <button class="link" id="logout">Sign out</button></span>
+    </header>
+
+    <div id="notice" class="notice" hidden></div>
+
+    <main>
+      <!-- Courses -->
+      <section data-panel="courses">
+        <div class="row-between">
+          <div>
+            <h2>Courses</h2>
+            <p class="muted">Drafts are hidden from the site. Changes go live after <b>Publish</b>.</p>
+          </div>
+          <button class="primary" id="new-course">+ Add course</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Order</th><th>Course</th><th>Level</th><th>Price</th><th>Lessons</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="course-rows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Academy info -->
+      <section data-panel="academy" hidden>
+        <h2>Academy info</h2>
+        <p class="muted">Used by the course guide and the Zia knowledge base. Leave refund or discount empty if there is no published policy; the agent will then hand those questions to a person.</p>
+        <form id="academy-form" class="card form-grid"></form>
+      </section>
+
+      <!-- Publish -->
+      <section data-panel="publish" hidden>
+        <h2>Publish</h2>
+        <div class="card">
+          <h3>1. Regenerate site and bot files</h3>
+          <p class="muted">Rebuilds the website catalogue, course guide, SalesIQ Answer Hub articles and the Zia Agent knowledge base from the saved courses.</p>
+          <button class="primary" id="publish-btn">Publish changes</button>
+          <ul id="publish-result" class="files"></ul>
+        </div>
+        <div class="card">
+          <h3>2. Zia Agent knowledge base</h3>
+          <p class="muted">Upload this file in Zia Agents → Knowledge Base → Upload Files → Upload from Desktop (Markdown is supported).</p>
+          <a class="button" href="/api/kb" download>Download knowledge base (.md)</a>
+        </div>
+        <div class="card">
+          <h3>3. Push to GitHub (redeploys the site)</h3>
+          <p class="muted" id="git-status">Checking…</p>
+          <label>Commit message <input id="commit-msg" value="Update course catalogue" maxlength="120"></label>
+          <button id="push-btn">Commit and push</button>
+        </div>
+      </section>
+
+      <!-- Activity -->
+      <section data-panel="activity" hidden>
+        <h2>Activity</h2>
+        <div class="table-wrap"><table><thead><tr><th>When</th><th>Who</th><th>Action</th><th>Details</th></tr></thead><tbody id="audit-rows"></tbody></table></div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Course editor -->
+  <dialog id="editor">
+    <form id="course-form" method="dialog">
+      <h2 id="editor-title">Add course</h2>
+      <div class="form-grid">
+        <label>Course ID <small>permanent, e.g. ecg-201</small><input name="id" required pattern="[a-z0-9]+(-[a-z0-9]+)*" maxlength="40"></label>
+        <label>Title<input name="title" required maxlength="80"></label>
+        <label>Level<select name="level" required></select></label>
+        <label>Topic / goal <small>shown in "pick by what you want to get better at"</small><input name="goal" required maxlength="80"></label>
+        <label>Duration<input name="duration" required placeholder="6 hours" maxlength="30"></label>
+        <label>Lessons<input name="lessons" type="number" min="1" max="500" required></label>
+        <label>Price (₹)<input name="price" type="number" min="0" max="1000000" required></label>
+        <label>Status<select name="status"><option value="draft">Draft</option><option value="published">Published</option></select></label>
+        <label class="wide">Summary<textarea name="summary" rows="2" required maxlength="400"></textarea></label>
+        <label class="wide">Who it's for<textarea name="audience" rows="2" required maxlength="400"></textarea></label>
+        <label class="wide">Learning outcomes <small>one per line, up to 8</small><textarea name="outcomes" rows="3" required></textarea></label>
+        <fieldset class="wide">
+          <legend>Not the right fit? Try instead <small>(up to 3)</small></legend>
+          <div id="alts"></div>
+          <button type="button" class="link" id="add-alt">+ Add alternative</button>
+        </fieldset>
+      </div>
+      <p class="error" id="form-error" role="alert"></p>
+      <div class="row-end">
+        <button type="button" id="cancel-edit">Cancel</button>
+        <button class="primary" type="submit" value="save">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="/static/admin.js"></script>
+</body>
+</html>

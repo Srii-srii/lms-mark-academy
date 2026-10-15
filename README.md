@@ -218,3 +218,33 @@ void forwardToCore(string coreUrl, string eventName, string stage, string email,
 ```
 
 Then move the ZMA tracking code and SalesIQ widget into TrainerCentral's **Header Code**, switch the website in ZMA and SalesIQ to the academy domain, and stop using the simulator. The sending domains (section 0) can stay as they are or be swapped for the academy's own.
+
+---
+
+## 7. Admin portal: manage courses
+
+Courses now live in `data/courses.json`, and `site/courses.js` is **generated** from it. Don't edit `courses.js`, `course-guide.html`, `bot/answer-hub-articles.md` or `kb/*` by hand.
+
+**Run it (on your machine only):**
+```bash
+pip install -r admin/requirements.txt
+ADMIN_PASSWORD='<choose one>' python -m uvicorn admin.app:app --host 127.0.0.1 --port 8800
+```
+PowerShell: `$env:ADMIN_PASSWORD='<choose one>'; python -m uvicorn admin.app:app --host 127.0.0.1 --port 8800`. Open http://127.0.0.1:8800 and sign in as `admin`.
+
+| Action | Where | Notes |
+| --- | --- | --- |
+| Add / edit a course | Courses → Add course / Edit | Course IDs are permanent: Zoho events and CRM records use them |
+| Publish, unpublish, retire | Course row buttons | Retired courses leave the site but stay in `window.RETIRED_COURSES` so `course.retired` events can name them. Then send learners the notice: Actions → Simulate learner event → `course.retired` |
+| Delete | Course row | Only drafts that were never published |
+| Reorder | ↑ ↓ | Order on the site and in the guides |
+| Academy info | Academy info tab | Enrolment, help, refund and discount text used by the guide and the Zia knowledge base. Leave refund/discount empty when there is no policy |
+| Publish | Publish tab | Regenerates `site/courses.js`, `site/course-guide.html`, `bot/answer-hub-articles.md`, `kb/zia-agent-knowledge-base.md`, `kb/zia-agent-instructions.md` and the simulator's course list |
+| Push to GitHub | Publish tab | Off by default. Start with `ALLOW_GIT_PUSH=1` to enable, or commit and push from a terminal |
+| Activity | Activity tab | Who changed what (`data/audit.log`, not committed) |
+
+Same as Publish, from a terminal: `python tools/build_course_guide.py`. Tests: `python -m pytest admin/tests -q`.
+
+**Zia Agent Studio:** upload `kb/zia-agent-knowledge-base.md` in Zia Agents → Knowledge Base → Upload Files → Upload from Desktop (PDF, text and Markdown are supported), attach it to the agent, and paste `kb/zia-agent-instructions.md` into the agent's instructions. Re-upload after each Publish that changes courses. Alternatively, use Web Scraping on `https://academy.lms-mark.website/course-guide.html` with a sync frequency, so the agent picks up changes after each deploy.
+
+**Security:** the portal is meant to run on `127.0.0.1`. Before hosting it anywhere public, put it behind HTTPS, set `COOKIE_SECURE=1`, a strong `ADMIN_PASSWORD` and a fixed `ADMIN_SECRET`.

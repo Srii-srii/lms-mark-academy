@@ -1,6 +1,6 @@
 # Answer Hub articles for the SalesIQ bot
 
-Generated from site/courses.js. Paste each section into SalesIQ → Answer Hub → Articles → Compose, using the title shown.
+GENERATED from data/courses.json. Paste each section into SalesIQ → Answer Hub → Articles → Compose, using the title shown.
 
 ## Which course should I choose?
 
@@ -12,7 +12,7 @@ Choose by what you want to get better at:
 - Medicines and safe prescribing: Clinical Pharmacology Basics (Intermediate, 8 hours, ₹1,999)
 - Research and publishing: Medical Research Writing (Advanced, 5 hours, ₹1,299)
 
-Shortest and cheapest: Basic Life Support Refresher (3 hours, ₹799). Full guide: https://academy.lms-mark.website/course-guide.html
+Lowest price: Basic Life Support Refresher (3 hours, ₹799). Full guide: https://academy.lms-mark.website/course-guide.html
 
 ## ECG Interpretation Essentials
 
