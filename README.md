@@ -248,3 +248,32 @@ Same as Publish, from a terminal: `python tools/build_course_guide.py`. Tests: `
 **Zia Agent Studio:** upload `kb/zia-agent-knowledge-base.md` in Zia Agents → Knowledge Base → Upload Files → Upload from Desktop (PDF, text and Markdown are supported), attach it to the agent, and paste `kb/zia-agent-instructions.md` into the agent's instructions. Re-upload after each Publish that changes courses. Alternatively, use Web Scraping on `https://academy.lms-mark.website/course-guide.html` with a sync frequency, so the agent picks up changes after each deploy.
 
 **Security:** the portal is meant to run on `127.0.0.1`. Before hosting it anywhere public, put it behind HTTPS, set `COOKIE_SECURE=1`, a strong `ADMIN_PASSWORD` and a fixed `ADMIN_SECRET`.
+
+---
+
+## 8. Admin portal online: admin.lms-mark.website (Render)
+
+When hosted, the portal keeps nothing on its own disk. Every save is a commit to `main` through the GitHub API, and **Publish** commits the regenerated files in one commit. That commit changes `site/`, so GitHub Pages redeploys the public site. `render.yaml` holds the Render settings.
+
+**1. GitHub token** (github.com → Settings → Developer settings → Fine-grained tokens → Generate new token)
+- Name `lms-mark-admin`. Pick an expiry (for example 90 days) and set a reminder to rotate it.
+- Repository access: **Only select repositories → lms-mark-academy**.
+- Permissions: **Contents: Read and write**, **Workflows: Read and write** (Publish updates the course list in `simulate-event.yml`). Metadata: Read is added automatically.
+- Copy the token. It is shown only once.
+
+**2. Render** (render.com → sign in with GitHub)
+- **New → Blueprint** → connect `Srii-srii/lms-mark-academy` → it reads `render.yaml`.
+- When asked, enter `ADMIN_PASSWORD` (long and unique) and `GITHUB_TOKEN` (from step 1). `ADMIN_SECRET` is generated for you.
+- Deploy. Check `https://lms-mark-admin.onrender.com/healthz` returns `{"ok":true}`, then sign in at `https://lms-mark-admin.onrender.com`.
+
+**3. Your address**
+- Render → the service → **Settings → Custom Domains → Add** `admin.lms-mark.website`.
+- Namecheap → Domain List → `lms-mark.website` → **Advanced DNS → Add new record**: type **CNAME**, host **admin**, value **lms-mark-admin.onrender.com** (use the exact target Render shows).
+- Back in Render, **Verify**. The HTTPS certificate is issued automatically, usually within minutes.
+
+**Good to know**
+- Free plan: the portal sleeps after about 15 idle minutes; the first visit then takes 30–60 seconds. Nothing is lost, because everything is in GitHub.
+- The portal redeploys only when `admin/` or `render.yaml` change, not on its own catalogue commits.
+- Who changed what: every commit message names the admin user (`Admin: edit course ecg-101 (admin)`). The Activity tab shows only events since the last restart.
+- Sign-in locks for 15 minutes after 5 failed attempts from one address. Change the password in Render → Environment; existing sessions stay valid until they expire (8 hours) unless you also change `ADMIN_SECRET`.
+- If the token expires, saving fails with "Saving to GitHub failed, nothing was changed". Create a new token and update `GITHUB_TOKEN` in Render.

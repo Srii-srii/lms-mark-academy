@@ -1,0 +1,35 @@
+# Render Blueprint for the admin portal (README section 8).
+# Render → New → Blueprint → pick this repo. Secrets marked sync:false are asked for at setup.
+services:
+  - type: web
+    name: lms-mark-admin
+    runtime: python
+    plan: free
+    region: singapore            # closest Render region to India
+    branch: main
+    rootDir: .
+    buildCommand: pip install -r admin/requirements.txt
+    startCommand: uvicorn admin.app:app --host 0.0.0.0 --port $PORT --proxy-headers --forwarded-allow-ips "*"
+    healthCheckPath: /healthz
+    autoDeploy: true
+    buildFilter:                 # don't restart the portal for its own catalogue commits
+      paths:
+        - admin/**
+        - render.yaml
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.7
+      - key: GITHUB_REPO
+        value: Srii-srii/lms-mark-academy
+      - key: GITHUB_BRANCH
+        value: main
+      - key: COOKIE_SECURE
+        value: "1"
+      - key: ADMIN_USER
+        value: admin
+      - key: ADMIN_SECRET
+        generateValue: true      # keeps sessions valid across restarts
+      - key: ADMIN_PASSWORD
+        sync: false              # you type it in Render; never commit it
+      - key: GITHUB_TOKEN
+        sync: false              # fine-grained token, this repo only (README section 8)

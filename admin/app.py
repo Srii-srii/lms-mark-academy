@@ -1,5 +1,9 @@
 """LMS-Mark Academy admin portal (FastAPI).
 
+Hosted (Render): see render.yaml and README section 8. With GITHUB_TOKEN and GITHUB_REPO
+set, every save is committed to GitHub, and Publish commits the generated files (the site
+then redeploys through GitHub Pages).
+
 Run locally:
   pip install -r admin/requirements.txt
   set ADMIN_PASSWORD=<choose one>          (PowerShell: $env:ADMIN_PASSWORD="...")
@@ -19,9 +23,10 @@ import os
 import secrets
 import subprocess
 import time
+from collections import defaultdict
 
 from fastapi import Depends, FastAPI, HTTPException, Request, Response
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -43,7 +48,30 @@ if not ADMIN_PASSWORD:
     ADMIN_PASSWORD = secrets.token_urlsafe(12)
     print(f"\n  ADMIN_PASSWORD not set. One-time password for this run: {ADMIN_PASSWORD}\n")
 
-app = FastAPI(title="LMS-Mark Academy admin", docs_url=None, redoc_url=None)
+app = FastAPI(title="LMS-Mark Academy admin", docs_url=None, redoc_url=None, openapi_url=None)
+
+HOSTED = catalog.STORE.kind == "github"
+if HOSTED and (not os.environ.get("ADMIN_PASSWORD") or not os.environ.get("ADMIN_SECRET")):
+    raise RuntimeError("Hosted mode needs ADMIN_PASSWORD and ADMIN_SECRET environment variables")
+
+
+@app.middleware("http")
+async def security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["Referrer-Policy"] = "same-origin"
+    response.headers["Content-Security-Policy"] = (
+        "default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' data:; frame-ancestors 'none'")
+    if os.environ.get("COOKIE_SECURE") == "1":
+        response.headers["Strict-Transport-Security"] = "max-age=31536000"
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
+@app.get("/healthz")
+def healthz():
+    return {"ok": True}
 
 
 # ---------------------------------------------------------------- auth
@@ -76,12 +104,23 @@ class Login(BaseModel):
     password: str
 
 
+_failures: dict[str, list[float]] = defaultdict(list)
+LOCK_AFTER, LOCK_WINDOW = 5, 15 * 60
+
+
 @app.post("/api/login")
-def login(body: Login, response: Response):
+def login(body: Login, request: Request, response: Response):
+    ip = request.client.host if request.client else "?"
+    recent = [t for t in _failures[ip] if t > time.time() - LOCK_WINDOW]
+    _failures[ip] = recent
+    if len(recent) >= LOCK_AFTER:
+        raise HTTPException(429, "Too many failed sign-ins. Try again in 15 minutes.")
     ok = hmac.compare_digest(body.username, ADMIN_USER) & hmac.compare_digest(body.password, ADMIN_PASSWORD)
     if not ok:
+        _failures[ip].append(time.time())
         time.sleep(1)  # slows down password guessing
         raise HTTPException(401, "Wrong username or password")
+    _failures.pop(ip, None)
     response.set_cookie(COOKIE, _make_token(body.username), httponly=True, samesite="strict",
                         secure=os.environ.get("COOKIE_SECURE") == "1", max_age=SESSION_HOURS * 3600)
     catalog.audit(body.username, "login", {})
@@ -96,7 +135,8 @@ def logout(response: Response):
 
 @app.get("/api/me")
 def me(user: str = Depends(current_user)):
-    return {"user": user, "allow_git_push": ALLOW_GIT_PUSH, "levels": catalog.LEVELS, "statuses": catalog.STATUSES}
+    return {"user": user, "storage": catalog.STORE.kind, "allow_git_push": ALLOW_GIT_PUSH,
+            "levels": catalog.LEVELS, "statuses": catalog.STATUSES}
 
 
 # ---------------------------------------------------------------- errors
@@ -104,6 +144,11 @@ def me(user: str = Depends(current_user)):
 @app.exception_handler(catalog.ValidationError)
 def _validation(_: Request, exc: catalog.ValidationError):
     return JSONResponse(status_code=422, content={"detail": exc.errors})
+
+
+@app.exception_handler(catalog.StoreError)
+def _store(_: Request, exc: Exception):
+    return JSONResponse(status_code=502, content={"detail": [f"Saving to GitHub failed, nothing was changed: {exc}"]})
 
 
 @app.exception_handler(KeyError)
@@ -174,10 +219,11 @@ def publish(user: str = Depends(current_user)):
 
 @app.get("/api/kb")
 def kb_file(user: str = Depends(current_user)):
-    path = catalog.ROOT / "kb" / "zia-agent-knowledge-base.md"
-    if not path.exists():
+    text = catalog.STORE.read("kb/zia-agent-knowledge-base.md")
+    if text is None:
         raise HTTPException(404, "Publish first to generate the knowledge base")
-    return FileResponse(path, media_type="text/markdown", filename="lms-mark-academy-knowledge-base.md")
+    return PlainTextResponse(text, media_type="text/markdown; charset=utf-8", headers={
+        "Content-Disposition": 'attachment; filename="lms-mark-academy-knowledge-base.md"'})
 
 
 @app.get("/api/audit")
@@ -197,8 +243,11 @@ def _git(*args: str) -> str:
 
 @app.get("/api/git/status")
 def git_status(user: str = Depends(current_user)):
+    if HOSTED:
+        return {"mode": "github", "changed": [], "allow_push": False,
+                "repo": os.environ.get("GITHUB_REPO"), "branch": os.environ.get("GITHUB_BRANCH", "main")}
     lines = _git("status", "--porcelain", "--", *GENERATED).splitlines()
-    return {"changed": [ln[3:] for ln in lines], "allow_push": ALLOW_GIT_PUSH}
+    return {"mode": "local", "changed": [ln[3:] for ln in lines], "allow_push": ALLOW_GIT_PUSH}
 
 
 class Push(BaseModel):
@@ -207,7 +256,7 @@ class Push(BaseModel):
 
 @app.post("/api/git/push")
 def git_push(body: Push, user: str = Depends(current_user)):
-    if not ALLOW_GIT_PUSH:
+    if HOSTED or not ALLOW_GIT_PUSH:
         raise HTTPException(403, "Pushing is off. Start the server with ALLOW_GIT_PUSH=1 to enable it.")
     msg = " ".join(body.message.split())[:120] or "Update course catalogue"
     if not _git("status", "--porcelain", "--", *GENERATED).strip():

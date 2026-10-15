@@ -1,6 +1,6 @@
 # LMS-Mark Academy: course catalogue knowledge base
 
-Source: the LMS-Mark Academy course catalogue (data/courses.json), generated 15 Oct 2026. Prices are in Indian rupees (INR). 4 courses are open for enrolment.
+Source: the LMS-Mark Academy course catalogue. Prices are in Indian rupees (INR). 4 courses are open for enrolment.
 
 ## About the academy
 

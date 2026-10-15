@@ -204,7 +204,10 @@ $("#publish-btn").addEventListener("click", async () => {
     const r = await api("/api/publish", { method: "POST" });
     $("#publish-result").innerHTML = Object.entries(r.files)
       .map(([f, changed]) => `<li class="${changed ? "changed" : ""}">${esc(f)}: ${changed ? "updated" : "no change"}</li>`).join("");
-    notify("Generated files are up to date.");
+    const anyChanged = Object.values(r.files).some(Boolean);
+    notify(!anyChanged ? "Nothing changed: the site already matches the saved courses."
+      : meta.storage === "github" ? "Published to GitHub. The site updates in about a minute."
+      : "Generated files are up to date. Push to GitHub to update the site.");
     await Promise.all([loadCourses(), loadGitStatus()]);
   } catch (err) { notify(err.message, "bad"); }
   btn.disabled = false;
@@ -213,6 +216,11 @@ $("#publish-btn").addEventListener("click", async () => {
 async function loadGitStatus() {
   try {
     const s = await api("/api/git/status");
+    $("#push-controls").hidden = s.mode === "github";
+    if (s.mode === "github") {
+      $("#git-status").textContent = `Hosted mode: every save and every Publish is committed straight to GitHub (${s.repo}, ${s.branch}). The public site redeploys about a minute after Publish.`;
+      return;
+    }
     $("#git-status").textContent = s.changed.length
       ? `Not yet on GitHub: ${s.changed.join(", ")}`
       : "Everything published is already committed.";

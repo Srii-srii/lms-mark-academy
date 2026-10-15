@@ -15,16 +15,18 @@ import html
 import json
 import os
 import re
-import tempfile
 import threading
 from datetime import datetime, timezone
 from pathlib import Path
+
+from .store import StoreError, from_env  # noqa: F401  (StoreError re-exported for app.py)
 
 ROOT = Path(os.environ.get("ACADEMY_ROOT", Path(__file__).resolve().parent.parent))
 DATA = ROOT / "data"
 COURSES_JSON = DATA / "courses.json"
 ACADEMY_JSON = DATA / "academy.json"
 AUDIT_LOG = DATA / "audit.log"
+STORE = from_env(ROOT)  # local folder, or GitHub commits when GITHUB_TOKEN/GITHUB_REPO are set
 
 LEVELS = ["Beginner", "Intermediate", "Advanced", "All levels"]
 STATUSES = ["draft", "published", "retired"]
@@ -46,33 +48,25 @@ def _now() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
 
 
-def _atomic_write(path: Path, text: str) -> bool:
-    """Write only when the content changed. Returns True if the file changed."""
-    path.parent.mkdir(parents=True, exist_ok=True)
-    if path.exists() and path.read_text(encoding="utf-8") == text:
-        return False
-    fd, tmp = tempfile.mkstemp(dir=path.parent, prefix=".tmp-")
-    with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as f:
-        f.write(text)
-    os.replace(tmp, path)
-    return True
-
-
-def load_courses() -> list[dict]:
-    data = json.loads(COURSES_JSON.read_text(encoding="utf-8"))
+def load_courses(fresh: bool = False) -> list[dict]:
+    data = json.loads(STORE.read("data/courses.json", fresh=fresh))
     return sorted(data["courses"], key=lambda c: (c.get("order", 0), c["id"]))
 
 
-def save_courses(courses: list[dict]) -> None:
-    _atomic_write(COURSES_JSON, json.dumps({"courses": courses}, ensure_ascii=False, indent=2) + "\n")
+def _courses_text(courses: list[dict]) -> str:
+    return json.dumps({"courses": courses}, ensure_ascii=False, indent=2) + "\n"
 
 
-def load_academy() -> dict:
-    return json.loads(ACADEMY_JSON.read_text(encoding="utf-8"))
+def save_courses(courses: list[dict], message: str) -> None:
+    STORE.write_files({"data/courses.json": _courses_text(courses)}, message)
 
 
-def save_academy(info: dict) -> None:
-    _atomic_write(ACADEMY_JSON, json.dumps(info, ensure_ascii=False, indent=2) + "\n")
+def load_academy(fresh: bool = False) -> dict:
+    return json.loads(STORE.read("data/academy.json", fresh=fresh))
+
+
+def save_academy(info: dict, message: str) -> None:
+    STORE.write_files({"data/academy.json": json.dumps(info, ensure_ascii=False, indent=2) + "\n"}, message)
 
 
 def audit(user: str, action: str, detail: dict) -> None:
@@ -159,19 +153,19 @@ def referenced_by(courses: list[dict], cid: str) -> list[str]:
 
 def create_course(raw: dict, user: str) -> dict:
     with _lock:
-        courses = load_courses()
+        courses = load_courses(fresh=True)
         c = clean_course(raw, courses, creating=True)
         c["order"] = max((x.get("order", 0) for x in courses), default=0) + 1
         c["created_at"] = c["updated_at"] = _now()
         courses.append(c)
-        save_courses(courses)
+        save_courses(courses, f"Admin: add course {c['id']} ({user})")
         audit(user, "create", {"id": c["id"], "status": c["status"]})
         return c
 
 
 def update_course(cid: str, raw: dict, user: str) -> dict:
     with _lock:
-        courses = load_courses()
+        courses = load_courses(fresh=True)
         old = next((x for x in courses if x["id"] == cid), None)
         if old is None:
             raise KeyError(cid)
@@ -182,7 +176,7 @@ def update_course(cid: str, raw: dict, user: str) -> dict:
                 c[keep] = old[keep]
         c["updated_at"] = _now()
         courses[courses.index(old)] = c
-        save_courses(courses)
+        save_courses(courses, f"Admin: edit course {cid} ({user})")
         changed = sorted(k for k in c if k != "updated_at" and old.get(k) != c.get(k))
         audit(user, "update", {"id": cid, "fields": changed})
         return c
@@ -192,7 +186,7 @@ def set_status(cid: str, status: str, user: str) -> tuple[dict, list[str]]:
     if status not in STATUSES:
         raise ValidationError([f"status: one of {', '.join(STATUSES)}"])
     with _lock:
-        courses = load_courses()
+        courses = load_courses(fresh=True)
         c = next((x for x in courses if x["id"] == cid), None)
         if c is None:
             raise KeyError(cid)
@@ -200,7 +194,7 @@ def set_status(cid: str, status: str, user: str) -> tuple[dict, list[str]]:
             raise ValidationError(["a retired course can only be republished"])
         before = c["status"]
         c["status"], c["updated_at"] = status, _now()
-        save_courses(courses)
+        save_courses(courses, f"Admin: {cid} {before} -> {status} ({user})")
         audit(user, "status", {"id": cid, "from": before, "to": status})
         warnings = []
         if status != "published":
@@ -214,7 +208,7 @@ def set_status(cid: str, status: str, user: str) -> tuple[dict, list[str]]:
 def delete_course(cid: str, user: str) -> None:
     """Only drafts that were never published can be deleted; published courses are retired."""
     with _lock:
-        courses = load_courses()
+        courses = load_courses(fresh=True)
         c = next((x for x in courses if x["id"] == cid), None)
         if c is None:
             raise KeyError(cid)
@@ -224,30 +218,30 @@ def delete_course(cid: str, user: str) -> None:
         if refs:
             raise ValidationError([f"remove it from 'try instead' in {', '.join(refs)} first"])
         courses.remove(c)
-        save_courses(courses)
+        save_courses(courses, f"Admin: delete draft {cid} ({user})")
         audit(user, "delete", {"id": cid})
 
 
 def reorder(ids: list[str], user: str) -> list[dict]:
     with _lock:
-        courses = load_courses()
+        courses = load_courses(fresh=True)
         if sorted(ids) != sorted(c["id"] for c in courses):
             raise ValidationError(["order must list every course id exactly once"])
         pos = {cid: i + 1 for i, cid in enumerate(ids)}
         for c in courses:
             c["order"] = pos[c["id"]]
-        save_courses(courses)
+        save_courses(courses, f"Admin: reorder courses ({user})")
         audit(user, "reorder", {"order": ids})
-        return load_courses()
+        return sorted(courses, key=lambda c: c["order"])
 
 
 def update_academy(raw: dict, user: str) -> dict:
     with _lock:
-        info = load_academy()
+        info = load_academy(fresh=True)
         for key in info:
             if key in raw:
                 info[key] = " ".join(str(raw[key]).split())
-        save_academy(info)
+        save_academy(info, f"Admin: edit academy info ({user})")
         audit(user, "academy", {"fields": sorted(k for k in raw if k in info)})
         return info
 
@@ -408,7 +402,7 @@ def render_zia_kb(courses: list[dict], academy: dict) -> str:
     out = [
         f"# {name}: course catalogue knowledge base",
         "",
-        f"Source: the {name} course catalogue (data/courses.json), generated {datetime.now().strftime('%d %b %Y')}. "
+        f"Source: the {name} course catalogue. "
         f"Prices are in Indian rupees (INR). {len(pub)} courses are open for enrolment.",
         "",
         "## About the academy",
@@ -523,11 +517,10 @@ courses, prices, levels, duration, certificates and enrolment.
 
 def update_workflow_choices(courses: list[dict]) -> str | None:
     """Course choices in the simulator workflow: published and retired ids."""
-    wf = ROOT / ".github" / "workflows" / "simulate-event.yml"
-    if not wf.exists():
+    text = STORE.read(".github/workflows/simulate-event.yml")
+    if text is None:
         return None
     ids = [c["id"] for c in courses if c["status"] in ("published", "retired")]
-    text = wf.read_text(encoding="utf-8")
     block = re.compile(r"(\n      course:\n(?:        .*\n)*?        default: )(\S+)(\n(?:        .*\n)*?        options: \[)[^\]]*(\])")
     m = block.search(text)
     if not m or not ids:
@@ -537,12 +530,15 @@ def update_workflow_choices(courses: list[dict]) -> str | None:
 
 
 def publish(user: str) -> dict:
-    """Regenerate every derived file. Returns {path: changed?}."""
+    """Regenerate every derived file (one commit in GitHub mode). Returns {path: changed?}."""
     with _lock:
-        courses = load_courses()
-        academy = load_academy()
+        courses = load_courses(fresh=True)
+        academy = load_academy(fresh=True)
         if not any(c["status"] == "published" for c in courses):
             raise ValidationError(["publish at least one course first; the site would be empty"])
+        for c in courses:
+            if c["status"] == "published":
+                c["published_once"] = True
         files = {
             "site/courses.js": render_courses_js(courses),
             "site/course-guide.html": render_course_guide(courses, academy),
@@ -553,13 +549,8 @@ def publish(user: str) -> dict:
         wf = update_workflow_choices(courses)
         if wf is not None:
             files[".github/workflows/simulate-event.yml"] = wf
-        result = {rel: _atomic_write(ROOT / rel, text) for rel, text in files.items()}
-        changed = False
-        for c in courses:
-            if c["status"] == "published" and not c.get("published_once"):
-                c["published_once"] = True
-                changed = True
-        if changed:
-            save_courses(courses)
+        written = STORE.write_files({**files, "data/courses.json": _courses_text(courses)},
+                                    f"Publish course catalogue ({user})")
+        result = {rel: written[rel] for rel in files}
         audit(user, "publish", {"changed": [k for k, v in result.items() if v]})
         return result
