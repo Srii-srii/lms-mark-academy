@@ -130,3 +130,18 @@ def test_kb_has_no_invented_policies(client):
     kb = (client.root / "kb/zia-agent-knowledge-base.md").read_text(encoding="utf-8")
     assert "No refund or cancellation policy is published yet" in kb
     assert "Information not in this catalogue" in kb
+
+
+def test_catalogue_json_follows_publish(client):
+    import json
+    login(client)
+    client.post("/api/courses", json={**NEW, "status": "published"})
+    client.post("/api/courses/bls-201/status", json={"status": "retired"})
+    files = client.post("/api/publish").json()["files"]
+    assert "site/catalogue.json" in files
+    cat = json.loads((client.root / "site/catalogue.json").read_text(encoding="utf-8"))
+    ids = [c["id"] for c in cat["courses"]]
+    assert "ecg-201" in ids and "bls-201" not in ids
+    assert cat["count"] == len(ids) == 4
+    assert "ONLY 4 courses" in cat["text"] and "Advanced ECG" in cat["text"]
+    assert "Basic Life Support" not in cat["text"]

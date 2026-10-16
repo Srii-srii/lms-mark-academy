@@ -1,0 +1,51 @@
+{
+  "academy": "LMS-Mark Academy",
+  "count": 4,
+  "text": "COURSE CATALOGUE of LMS-Mark Academy. These are the ONLY 4 courses that exist. Never mention any other course, price or duration.\n1. ECG Interpretation Essentials: Beginner, 6 hours over 12 lessons, Rs 1,499. Topic: reading ECGs and heart rhythms. Page: https://academy.lms-mark.website/course.html?id=ecg-101\n2. Basic Life Support Refresher: All levels, 3 hours over 8 lessons, Rs 799. Topic: emergencies and resuscitation. Page: https://academy.lms-mark.website/course.html?id=bls-201\n3. Clinical Pharmacology Basics: Intermediate, 8 hours over 16 lessons, Rs 1,999. Topic: medicines and safe prescribing. Page: https://academy.lms-mark.website/course.html?id=pharm-110\n4. Medical Research Writing: Advanced, 5 hours over 10 lessons, Rs 1,299. Topic: research and publishing. Page: https://academy.lms-mark.website/course.html?id=research-300\nAll courses are self-paced video lessons with a short quiz and a certificate on completion, with lifetime access. Write prices with the rupee symbol. Do not use tables or the | character.",
+  "courses": [
+    {
+      "id": "ecg-101",
+      "title": "ECG Interpretation Essentials",
+      "level": "Beginner",
+      "duration": "6 hours",
+      "lessons": 12,
+      "price": 1499,
+      "currency": "INR",
+      "topic": "Reading ECGs and heart rhythms",
+      "url": "https://academy.lms-mark.website/course.html?id=ecg-101"
+    },
+    {
+      "id": "bls-201",
+      "title": "Basic Life Support Refresher",
+      "level": "All levels",
+      "duration": "3 hours",
+      "lessons": 8,
+      "price": 799,
+      "currency": "INR",
+      "topic": "Emergencies and resuscitation",
+      "url": "https://academy.lms-mark.website/course.html?id=bls-201"
+    },
+    {
+      "id": "pharm-110",
+      "title": "Clinical Pharmacology Basics",
+      "level": "Intermediate",
+      "duration": "8 hours",
+      "lessons": 16,
+      "price": 1999,
+      "currency": "INR",
+      "topic": "Medicines and safe prescribing",
+      "url": "https://academy.lms-mark.website/course.html?id=pharm-110"
+    },
+    {
+      "id": "research-300",
+      "title": "Medical Research Writing",
+      "level": "Advanced",
+      "duration": "5 hours",
+      "lessons": 10,
+      "price": 1299,
+      "currency": "INR",
+      "topic": "Research and publishing",
+      "url": "https://academy.lms-mark.website/course.html?id=research-300"
+    }
+  ]
+}

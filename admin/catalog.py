@@ -503,6 +503,41 @@ def render_zia_kb(courses: list[dict], academy: dict) -> str:
     return "\n".join(out)
 
 
+def render_catalogue_json(courses: list[dict], academy: dict) -> str:
+    """Machine-readable catalogue served at <site>/catalogue.json.
+
+    Read on every question by the SalesIQ plug "ZiaAgent", which sends `text` to the
+    Zia agent so it can only talk about published courses. `text` is pre-formatted so
+    the plug needs no parsing; `courses` is there for any other consumer.
+    """
+    pub = _visible(courses)
+    site = academy["site_url"]
+    lines = [
+        f"COURSE CATALOGUE of {academy['name']}. These are the ONLY {len(pub)} courses that exist. "
+        "Never mention any other course, price or duration."
+    ]
+    for i, c in enumerate(pub, 1):
+        lines.append(
+            f"{i}. {c['title']}: {c['level']}, {c['duration']} over {c['lessons']} lessons, "
+            f"Rs {c['price']:,}. Topic: {c['goal'][0].lower() + c['goal'][1:]}. "
+            f"Page: {site}/course.html?id={c['id']}")
+    lines.append(
+        f"{academy['course_format']} Write prices with the rupee symbol. "
+        "Do not use tables or the | character.")
+    data = {
+        "academy": academy["name"],
+        "count": len(pub),
+        "text": "\n".join(lines),
+        "courses": [
+            {"id": c["id"], "title": c["title"], "level": c["level"], "duration": c["duration"],
+             "lessons": c["lessons"], "price": c["price"], "currency": "INR", "topic": c["goal"],
+             "url": f"{site}/course.html?id={c['id']}"}
+            for c in pub
+        ],
+    }
+    return json.dumps(data, ensure_ascii=False, indent=2) + "\n"
+
+
 def render_zia_instructions(courses: list[dict], academy: dict) -> str:
     name = academy["name"]
     return f"""# Instructions for the {name} course advisor agent
@@ -559,6 +594,7 @@ def publish(user: str) -> dict:
             "bot/answer-hub-articles.md": render_answer_hub(courses, academy),
             "kb/zia-agent-knowledge-base.md": render_zia_kb(courses, academy),
             "kb/zia-agent-instructions.md": render_zia_instructions(courses, academy),
+            "site/catalogue.json": render_catalogue_json(courses, academy),
         }
         wf = update_workflow_choices(courses)
         if wf is not None:

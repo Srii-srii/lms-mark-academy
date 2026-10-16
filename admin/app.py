@@ -42,7 +42,7 @@ SECRET = os.environ.get("ADMIN_SECRET") or secrets.token_hex(32)  # restart = ev
 ALLOW_GIT_PUSH = os.environ.get("ALLOW_GIT_PUSH") == "1"
 GENERATED = ["data/courses.json", "data/academy.json", "site/courses.js", "site/course-guide.html",
              "bot/answer-hub-articles.md", "kb/zia-agent-knowledge-base.md", "kb/zia-agent-instructions.md",
-             ".github/workflows/simulate-event.yml"]
+             "site/catalogue.json", ".github/workflows/simulate-event.yml"]
 
 if not ADMIN_PASSWORD:
     ADMIN_PASSWORD = secrets.token_urlsafe(12)
