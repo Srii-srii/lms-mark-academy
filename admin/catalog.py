@@ -405,6 +405,20 @@ def render_zia_kb(courses: list[dict], academy: dict) -> str:
         f"Source: the {name} course catalogue. "
         f"Prices are in Indian rupees (INR). {len(pub)} courses are open for enrolment.",
         "",
+        f"## What courses does {name} offer? (complete list)",
+        "",
+        f"{name} offers exactly {len(pub)} courses. This is the complete list; no other courses exist:",
+        "",
+        *[f"{i}. {c['title']}: {c['level']}, {c['duration']}, {c['lessons']} lessons, {_price(c['price'])}. "
+          f"Topic: {c['goal']}. Course page: {site}/course.html?id={c['id']}"
+          for i, c in enumerate(pub, 1)],
+        "",
+        f"Never name, describe or price any course that is not in this list. If no course fits what the learner "
+        f"wants, say so and suggest the closest of these {len(pub)} courses.",
+        "",
+        "Common questions this list answers: what courses do you have, suggest me a course, recommend a course, "
+        "which course should I take, list all courses, course fees, course prices, cheapest course.",
+        "",
         "## About the academy",
         "",
         f"{name}: {academy['tagline']}",

@@ -2,6 +2,19 @@
 
 Source: the LMS-Mark Academy course catalogue. Prices are in Indian rupees (INR). 4 courses are open for enrolment.
 
+## What courses does LMS-Mark Academy offer? (complete list)
+
+LMS-Mark Academy offers exactly 4 courses. This is the complete list; no other courses exist:
+
+1. ECG Interpretation Essentials: Beginner, 6 hours, 12 lessons, ₹1,499. Topic: Reading ECGs and heart rhythms. Course page: https://academy.lms-mark.website/course.html?id=ecg-101
+2. Basic Life Support Refresher: All levels, 3 hours, 8 lessons, ₹799. Topic: Emergencies and resuscitation. Course page: https://academy.lms-mark.website/course.html?id=bls-201
+3. Clinical Pharmacology Basics: Intermediate, 8 hours, 16 lessons, ₹1,999. Topic: Medicines and safe prescribing. Course page: https://academy.lms-mark.website/course.html?id=pharm-110
+4. Medical Research Writing: Advanced, 5 hours, 10 lessons, ₹1,299. Topic: Research and publishing. Course page: https://academy.lms-mark.website/course.html?id=research-300
+
+Never name, describe or price any course that is not in this list. If no course fits what the learner wants, say so and suggest the closest of these 4 courses.
+
+Common questions this list answers: what courses do you have, suggest me a course, recommend a course, which course should I take, list all courses, course fees, course prices, cheapest course.
+
 ## About the academy
 
 LMS-Mark Academy: Clinical skills courses taught by practising clinicians.
